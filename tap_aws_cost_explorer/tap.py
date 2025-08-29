@@ -21,19 +21,27 @@ class TapAWSCostExplorer(Tap):
         th.Property(
             "access_key",
             th.StringType,
-            required=True,
-            description="Your AWS Account Access Key."
+            description="Your AWS Account Access Key. Required if not using IAM role."
         ),
         th.Property(
             "secret_key",
             th.StringType,
-            required=True,
-            description="Your AWS Account Secret Key."
+            description="Your AWS Account Secret Key. Required if not using IAM role."
         ),
         th.Property(
             "session_token",
             th.StringType,
             description="Your AWS Account Session Token if required for authentication."
+        ),
+        th.Property(
+            "role_arn",
+            th.StringType,
+            description="Optional. ARN of the IAM Role to assume for authentication. If provided, will use role-based auth."
+        ),
+        th.Property(
+            "external_id",
+            th.StringType,
+            description="Optional. External ID to use when assuming the IAM role."
         ),
         th.Property(
             "start_date",
@@ -50,18 +58,13 @@ class TapAWSCostExplorer(Tap):
             "granularity",
             th.StringType,
             required=True,
-            description="Sets the Amazon Web Services cost granularity to \
-                        MONTHLY or DAILY , or HOURLY."
+            description="Sets the Amazon Web Services cost granularity to MONTHLY or DAILY , or HOURLY."
         ),
         th.Property(
             "metrics",
             th.ArrayType(th.StringType),
             required=True,
-            description="Which metrics are returned in the query. Valid \
-                        values are AmortizedCost, BlendedCost, \
-                        NetAmortizedCost, NetUnblendedCost, \
-                        NormalizedUsageAmount, UnblendedCost, and \
-                        UsageQuantity."
+            description="Which metrics are returned in the query. Valid values are AmortizedCost, BlendedCost, NetAmortizedCost, NetUnblendedCost, NormalizedUsageAmount, UnblendedCost, and UsageQuantity."
         ),
     ).to_dict()
 
