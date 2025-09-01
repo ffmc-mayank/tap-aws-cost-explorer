@@ -66,6 +66,16 @@ class TapAWSCostExplorer(Tap):
             required=True,
             description="Which metrics are returned in the query. Valid values are AmortizedCost, BlendedCost, NetAmortizedCost, NetUnblendedCost, NormalizedUsageAmount, UnblendedCost, and UsageQuantity."
         ),
+        th.Property(
+            "group_by",
+            th.ArrayType(
+                th.ObjectType(
+                    th.Property("Type", th.StringType, required=True, description="Type of grouping: 'TAG' or 'DIMENSION'"),
+                    th.Property("Key", th.StringType, required=True, description="Key to group by, e.g., 'Application' for TAGs or 'REGION' for DIMENSION")
+                )
+            ),
+            description="Optional. The dimensions to group the results by. Example: [{'Type': 'TAG', 'Key': 'Application'}, {'Type': 'DIMENSION', 'Key': 'REGION'}]"
+        ),
     ).to_dict()
 
     def discover_streams(self) -> List[Stream]:

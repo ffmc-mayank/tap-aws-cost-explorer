@@ -1,5 +1,6 @@
 """Custom client handling, including AWSCostExplorerStream base class."""
 
+import os
 import boto3
 
 from singer_sdk.streams.core import Stream
@@ -10,44 +11,45 @@ class AWSCostExplorerStream(Stream):
     """Stream class for AWSCostExplorer streams."""
     def __init__(self, tap: Tap):
         super().__init__(tap)
-        # IAM Role-based auth support
-        role_arn = self.config.get("role_arn")
-        external_id = self.config.get("external_id")
-        access_key = self.config.get("access_key")
-        secret_key = self.config.get("secret_key")
-        session_token = self.config.get("session_token")
+        self._client = None
 
-        if role_arn:
-            # Use STS to assume role
-            sts_kwargs = {}
-            if access_key and secret_key:
-                sts_kwargs["aws_access_key_id"] = access_key
-                sts_kwargs["aws_secret_access_key"] = secret_key
-                if session_token:
-                    sts_kwargs["aws_session_token"] = session_token
-            sts_client = boto3.client("sts", **sts_kwargs)
-            assume_role_kwargs = {
-                "RoleArn": role_arn,
-                "RoleSessionName": "TapAWSCostExplorerSession"
-            }
-            if external_id:
-                assume_role_kwargs["ExternalId"] = external_id
-            creds = sts_client.assume_role(**assume_role_kwargs)["Credentials"]
-            self.conn = boto3.client(
-                'ce',
-                aws_access_key_id=creds["AccessKeyId"],
-                aws_secret_access_key=creds["SecretAccessKey"],
-                aws_session_token=creds["SessionToken"],
+    @property
+    def client(self):
+        """Property to access client object."""
+        if not self._client:
+            raise Exception("Client not yet initialized")
+        return self._client
+
+    def _create_client(self, config):
+        aws_access_key_id = config.get("aws_access_key_id") or os.environ.get(
+            "AWS_ACCESS_KEY_ID"
+        )
+        aws_secret_access_key = config.get("aws_secret_access_key") or os.environ.get(
+            "AWS_SECRET_ACCESS_KEY"
+        )
+        aws_session_token = config.get("aws_session_token") or os.environ.get(
+            "AWS_SESSION_TOKEN"
+        )
+        aws_profile = config.get("aws_profile") or os.environ.get("AWS_PROFILE")
+        aws_endpoint_url = config.get("aws_endpoint_url")
+        aws_region_name = config.get("aws_region_name")
+
+        # AWS credentials based authentication
+        if aws_access_key_id and aws_secret_access_key:
+            aws_session = boto3.session.Session(
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key,
+                aws_session_token=aws_session_token,
+                region_name=aws_region_name,
             )
-        elif access_key and secret_key:
-            # Fallback to direct key-based auth
-            self.conn = boto3.client(
-                'ce',
-                aws_access_key_id=access_key,
-                aws_secret_access_key=secret_key,
-                aws_session_token=session_token,
-            )
+        # AWS Profile based authentication
         else:
-            raise ValueError(
-                "You must provide either IAM role credentials (role_arn) or AWS access_key and secret_key for authentication."
-            )
+            aws_session = boto3.session.Session(profile_name=aws_profile)
+        if aws_endpoint_url:
+            ce = aws_session.client("ce", endpoint_url=aws_endpoint_url)
+        else:
+            ce = aws_session.client("ce")
+        return ce
+
+    def authenticate(self):
+        self._client = self._create_client(self.config)
