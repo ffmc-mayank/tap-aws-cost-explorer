@@ -3,27 +3,38 @@ send_anonymous_usage_stats: true
 project_id: tap-aws-cost-explorer
 plugins:
   extractors:
-  - name: tap-aws-cost-explorer
-    namespace: tap_aws_cost_explorer
-    # TODO: To test using Meltano, replace with absolute path
-    #       to the tap-aws-cost-explorer.sh script:
-    executable: ./tap-aws-cost-explorer.sh
-    capabilities:
-    - state
-    - catalog
-    - discover
-    config:
-    settings:
-    # TODO: To configure using Meltano, declare settings and their types here:
-    - name: access_key
-      kind: password
-    - name: secret_key
-      kind: password
-    - name: start_date
-    - name: end_date
-    - name: granularity
-    - name: metrics
+    - name: tap-aws-cost-explorer
+      namespace: tap_aws_cost_explorer
+      # TODO: To test using Meltano, replace with absolute path
+      #       to the tap-aws-cost-explorer.sh script:
+      executable: ./tap-aws-cost-explorer.sh
+      capabilities:
+        - state
+        - catalog
+        - discover
+      settings:
+        # TODO: To configure using Meltano, declare settings and their types here:
+        - name: access_key
+          kind: password
+        - name: secret_key
+          kind: password
+        - name: session_token
+          kind: password
+        - name: role_arn
+          kind: string
+        - name: external_id
+          kind: string
+        - name: group_by
+          kind: array
+        - name: start_date
+          kind: string
+        - name: end_date
+          kind: string
+        - name: granularity
+          kind: string
+        - name: metrics
+          kind: array
   loaders:
-  - name: target-jsonl
-    variant: andyh1203
-    pip_url: target-jsonl
+    - name: target-jsonl
+      variant: andyh1203
+      pip_url: target-jsonl
