@@ -22,8 +22,11 @@ class CostAndUsageWithResourcesStream(AWSCostExplorerStream):
         th.Property("metric_name", th.StringType),
         th.Property("amount", th.StringType),
         th.Property("amount_unit", th.StringType),
-        th.Property("group_keys", th.ArrayType),
-        th.Property("group_definitions", th.ArrayType),
+        th.Property("group_keys", th.ArrayType(th.StringType)),
+        th.Property("group_definitions", th.ArrayType(th.ObjectType(
+                    th.Property("Type", th.StringType, required=True, description="Type of grouping: 'TAG' or 'DIMENSION'"),
+                    th.Property("Key", th.StringType, required=True, description="Key to group by, e.g., 'Application' for TAGs or 'REGION' for DIMENSION")
+                ))),
         th.Property("estimated", th.BooleanType),
         th.Property("_id", th.StringType),
     ).to_dict()
